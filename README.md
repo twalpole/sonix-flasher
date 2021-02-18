@@ -1,4 +1,4 @@
-# Womier Flasher
+# Sonix Flasher
 
 ## Compile
 

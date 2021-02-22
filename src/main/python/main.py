@@ -161,9 +161,9 @@ class MainWindow(QWidget):
 
         layout_device_type = QHBoxLayout()
         rbtn_device_type_240 = QRadioButton("SN32F24x")
-        rbtn_device_type_240.setChecked(True)
         rbtn_device_type_240.toggled.connect(lambda:self.on_toggle_device_type(rbtn_device_type_240))
         rbtn_device_type_260 = QRadioButton("SN32F26x")
+        rbtn_device_type_260.setChecked(True)
         rbtn_device_type_260.toggled.connect(lambda:self.on_toggle_device_type(rbtn_device_type_260))
         layout_device_type.addWidget(rbtn_device_type_260)
         layout_device_type.addWidget(rbtn_device_type_240)

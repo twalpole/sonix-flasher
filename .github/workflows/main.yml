@@ -28,7 +28,7 @@ jobs:
         source venv/bin/activate
         fbs freeze
         cd target
-        tar cfJ flasher-linux.tar.xz "Womier Flasher"
+        tar cfJ flasher-linux.tar.xz "Sonix Keyboard Flasher"
 
     - uses: actions/upload-artifact@v1
       with:
@@ -54,7 +54,7 @@ jobs:
       run: |
         source venv/bin/activate
         fbs freeze
-        hdiutil create -volname "Womier Flasher" -srcfolder "target/Womier Flasher.app" -ov -format UDZO flasher-mac.dmg
+        hdiutil create -volname "Sonix Keyboard Flasher" -srcfolder "target/Sonix Keyboard Flasher.app" -ov -format UDZO flasher-mac.dmg
 
     - uses: actions/upload-artifact@v1
       with:
@@ -80,7 +80,7 @@ jobs:
       run: |
         . .\venv\Scripts\activate.ps1
         fbs freeze
-        Compress-Archive -Path "target\Womier Flasher" -DestinationPath flasher-win.zip
+        Compress-Archive -Path "target\Sonix Keyboard Flasher" -DestinationPath flasher-win.zip
 
     - uses: actions/upload-artifact@v1
       with:

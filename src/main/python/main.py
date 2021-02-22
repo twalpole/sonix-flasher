@@ -396,7 +396,7 @@ if __name__ == '__main__':
     appctxt = ApplicationContext()
     window = MainWindow()
     window.resize(600, 250)
-    window.setWindowTitle("Womier Bricker")
+    window.setWindowTitle("Sonix Keyboard Flasher")
     window.show()
     sys.excepthook = excepthook
     exit_code = appctxt.app.exec_()

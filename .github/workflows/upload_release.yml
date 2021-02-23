@@ -1,0 +1,143 @@
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+name: Upload Release Asset
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-16.04
+
+    steps:
+    - name: Install dependencies
+      run: sudo apt-get install libusb-1.0-0-dev libudev-dev
+
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.6.x'
+
+    - name: Setup venv
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install --upgrade setuptools
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Build
+      run: |
+        source venv/bin/activate
+        fbs freeze
+        cd target
+        tar cfJ flasher-linux.tar.xz "Sonix Keyboard Flasher"
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        asset_path: target/flasher-linux.tar.xz
+        asset_name: flasher-linux.tar.xz
+        asset_content_type: application/zip
+
+  build-mac:
+    runs-on: macos-10.15
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.6.x'
+
+    - name: Setup venv
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+
+    - name: Build
+      run: |
+        source venv/bin/activate
+        fbs freeze
+        hdiutil create -volname "Sonix Keyboard Flasher" -srcfolder "target/Sonix Keyboard Flasher.app" -ov -format UDZO flasher-mac.dmg
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        asset_path: flasher-mac.dmg
+        asset_name: flasher-mac.dmg
+        asset_content_type: application/zip
+
+  build-win:
+    runs-on: windows-2019
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.6.x'
+
+    - name: Setup venv
+      run: |
+        python -m venv venv
+        . .\venv\Scripts\activate.ps1
+        pip install -r requirements.txt
+
+    - name: Build
+      run: |
+        . .\venv\Scripts\activate.ps1
+        fbs freeze
+        Compress-Archive -Path "target\Sonix Keyboard Flasher" -DestinationPath flasher-win.zip
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        asset_path: flasher-win.zip
+        asset_name: flasher-win.zip
+        asset_content_type: application/zip

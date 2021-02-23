@@ -229,7 +229,7 @@ class MainWindow(QWidget):
 
     def load_devices_ini(self):
         cf = configparser.ConfigParser()
-        cf.read("devices.ini")
+        cf.read(appctxt.get_resource("devices.ini"))
         for sec in cf.sections():
             # print(cf.options(sec))
             vid = int(cf.get(sec,'vid'), 16)

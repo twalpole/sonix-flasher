@@ -14,8 +14,8 @@ import traceback
 # TODO: dry-run support to ensure flashing doesn't crash
 
 RESPONSE_LEN = 64
-MAX_FIRMWARE_SN32F260 = 30 * 1024 # 30K
-MAX_FIRMWARE_SN32F240 = 64 * 1024 # 64K
+MAX_FIRMWARE_SN32F260 = 30 * 1024  # 30K
+MAX_FIRMWARE_SN32F240 = 64 * 1024  # 64K
 MAX_FIRMWARE = MAX_FIRMWARE_SN32F260
 QMK_OFFSET_DEFAULT = 0x200
 
@@ -36,6 +36,7 @@ DEVICE_DESC = {
     (0x0c45, 0x7040): "SN32F248B (bootloader)",
 }
 
+
 def hid_set_feature(dev, report):
     if len(report) > 64:
         raise RuntimeError("report must be less than 64 bytes")
@@ -44,18 +45,23 @@ def hid_set_feature(dev, report):
     # add 00 at start for hidapi report id
     dev.send_feature_report(b"\x00" + report)
 
+
 def hid_get_feature(dev):
     # strip 00 at start for hidapi report id
     return dev.get_feature_report(0, RESPONSE_LEN + 1)[1:]
 
+
 def console_progress(msg, progress):
     print("{}: {:.2f}%".format(msg, 100 * progress))
+
 
 def console_complete():
     pass
 
+
 def console_error(msg):
     print("Error: {}".format(msg))
+
 
 def cmd_flash(dev, offset, firmware, progress_cb=console_progress, complete_cb=console_complete, error_cb=console_error):
     while len(firmware) % 64 != 0:
@@ -77,7 +83,8 @@ def cmd_flash(dev, offset, firmware, progress_cb=console_progress, complete_cb=c
 
     # 2) Prepare for flash
     progress_cb("Preparing for flash", 0)
-    hid_set_feature(dev, struct.pack("<III", CMD_PREPARE, offset, len(firmware) // 64))
+    hid_set_feature(dev, struct.pack(
+        "<III", CMD_PREPARE, offset, len(firmware) // 64))
     resp = bytes(hid_get_feature(dev))
     if len(resp) != RESPONSE_LEN:
         return error_cb("Failed to prepare: got response of length {}, expected {}".format(len(resp), RESPONSE_LEN))
@@ -108,6 +115,7 @@ def cmd_reboot(dev, progress_cb=console_progress, complete_cb=console_complete, 
     time.sleep(5)
     complete_cb()
 
+
 class MainWindow(QWidget):
 
     progress_signal = pyqtSignal(object)
@@ -128,15 +136,18 @@ class MainWindow(QWidget):
         self.complete_signal.connect(self._on_complete)
         self.error_signal.connect(self._on_error)
 
-        lbl_warning = QLabel("<font color='red'><b>Make sure jumploader is installed before you flash QMK</b></font>")
+        lbl_warning = QLabel(
+            "<font color='red'><b>Make sure jumploader is installed before you flash QMK</b></font>")
         lbl_warning.setWordWrap(True)
 
         layout_offset = QHBoxLayout()
         rbtn_qmk_offset_200 = QRadioButton("0x200")
         rbtn_qmk_offset_200.setChecked(True)
-        rbtn_qmk_offset_200.toggled.connect(lambda:self.on_toggle_offset(rbtn_qmk_offset_200))
+        rbtn_qmk_offset_200.toggled.connect(
+            lambda: self.on_toggle_offset(rbtn_qmk_offset_200))
         rbtn_qmk_offset_0 = QRadioButton("0x00")
-        rbtn_qmk_offset_0.toggled.connect(lambda:self.on_toggle_offset(rbtn_qmk_offset_0))
+        rbtn_qmk_offset_0.toggled.connect(
+            lambda: self.on_toggle_offset(rbtn_qmk_offset_0))
         layout_offset.addWidget(rbtn_qmk_offset_200)
         layout_offset.addWidget(rbtn_qmk_offset_0)
         group_qmk_offset = QGroupBox("qmk offset")
@@ -145,7 +156,8 @@ class MainWindow(QWidget):
         btn_flash_qmk = QPushButton("Flash QMK...")
         btn_flash_qmk.clicked.connect(self.on_click_flash_qmk)
 
-        lbl_help = QLabel("After jumploader is installed, hold Backspace while plugging in the keyboard to start in bootloader mode.")
+        lbl_help = QLabel(
+            "After jumploader is installed, hold Backspace while plugging in the keyboard to start in bootloader mode.")
         lbl_help.setWordWrap(True)
 
         btn_reboot_bl = QPushButton("Reboot to Bootloader")
@@ -161,13 +173,14 @@ class MainWindow(QWidget):
 
         layout_device_type = QHBoxLayout()
         rbtn_device_type_240 = QRadioButton("SN32F24x")
-        rbtn_device_type_240.toggled.connect(lambda:self.on_toggle_device_type(rbtn_device_type_240))
+        rbtn_device_type_240.toggled.connect(
+            lambda: self.on_toggle_device_type(rbtn_device_type_240))
         rbtn_device_type_260 = QRadioButton("SN32F26x")
         rbtn_device_type_260.setChecked(True)
-        rbtn_device_type_260.toggled.connect(lambda:self.on_toggle_device_type(rbtn_device_type_260))
+        rbtn_device_type_260.toggled.connect(
+            lambda: self.on_toggle_device_type(rbtn_device_type_260))
         layout_device_type.addWidget(rbtn_device_type_260)
         layout_device_type.addWidget(rbtn_device_type_240)
-
 
         self.combobox_devices = QComboBox()
         btn_refresh_devices = QToolButton()
@@ -223,7 +236,7 @@ class MainWindow(QWidget):
         self.setLayout(layout)
 
         self.lockable = [btn_flash_qmk, btn_reboot_bl, btn_flash_jumploader, btn_restore_stock,
-            self.combobox_devices, btn_refresh_devices]
+                         self.combobox_devices, btn_refresh_devices]
 
         self.on_click_refresh()
 
@@ -232,8 +245,8 @@ class MainWindow(QWidget):
         cf.read(appctxt.get_resource("devices.ini"))
         for sec in cf.sections():
             # print(cf.options(sec))
-            vid = int(cf.get(sec,'vid'), 16)
-            pid = int(cf.get(sec,'pid'), 16)
+            vid = int(cf.get(sec, 'vid'), 16)
+            pid = int(cf.get(sec, 'pid'), 16)
             self.device_descs.update({(vid, pid): sec})
 
     def lock_user(self):
@@ -313,14 +326,16 @@ class MainWindow(QWidget):
             dev.open_path(self.devices[idx]["path"])
             return dev
         except OSError:
-            self._on_error("Failed to open the device. You might not have sufficient permissions.")
+            self._on_error(
+                "Failed to open the device. You might not have sufficient permissions.")
             return None
 
     def sanity_check_qmk_firmware(self, firmware, offset=0):
         # check the size so we don't trash bootloader
         # (ok, we wouldn't overwrite it anyway as it's checked again in cmd_flash)
         if len(firmware) + offset > MAX_FIRMWARE:
-            self._on_error("Firmware is too large: 0x{:X} max allowed is 0x{:X}".format(len(firmware), MAX_FIRMWARE-offset))
+            self._on_error("Firmware is too large: 0x{:X} max allowed is 0x{:X}".format(
+                len(firmware), MAX_FIRMWARE-offset))
             return False
         if len(firmware) < 0x100:
             self._on_error("Firmware is too small")
@@ -340,7 +355,8 @@ class MainWindow(QWidget):
 
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        filename = QFileDialog.getOpenFileName(None, "Select firmware to flash", "", "Firmware Files (*.bin)", options=options)[0]
+        filename = QFileDialog.getOpenFileName(
+            None, "Select firmware to flash", "", "Firmware Files (*.bin)", options=options)[0]
         if not filename:
             self.close_dev()
             return
@@ -353,7 +369,8 @@ class MainWindow(QWidget):
             return
 
         self.lock_user()
-        threading.Thread(target=lambda: cmd_flash(self.dev, self.qmk_offset, firmware, self.on_progress, self.on_complete, self.on_error)).start()
+        threading.Thread(target=lambda: cmd_flash(self.dev, self.qmk_offset,
+                                                  firmware, self.on_progress, self.on_complete, self.on_error)).start()
 
     def on_click_reboot(self):
         self.dev = self.get_active_device()
@@ -361,11 +378,12 @@ class MainWindow(QWidget):
             return
 
         self.lock_user()
-        threading.Thread(target=lambda: cmd_reboot(self.dev, self.on_progress, self.on_complete, self.on_error)).start()
+        threading.Thread(target=lambda: cmd_reboot(
+            self.dev, self.on_progress, self.on_complete, self.on_error)).start()
 
     def dangerous_flash(self, path):
         reply = QMessageBox.question(self, "Warning", "This is a potentially dangerous operation, are you sure you want to continue?",
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply != QMessageBox.Yes:
             return
 
@@ -377,7 +395,8 @@ class MainWindow(QWidget):
             firmware = inf.read()
 
         self.lock_user()
-        threading.Thread(target=lambda: cmd_flash(self.dev, 0, firmware, self.on_progress, self.on_complete, self.on_error)).start()
+        threading.Thread(target=lambda: cmd_flash(
+            self.dev, 0, firmware, self.on_progress, self.on_complete, self.on_error)).start()
 
     def on_click_revert(self):
         self.dangerous_flash(appctxt.get_resource("stock-firmware.bin"))

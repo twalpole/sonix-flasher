@@ -29,7 +29,7 @@ EXPECTED_STATUS = 0xFAFAFAFA
 
 DEVICE_DESC = {
     (0x0c45, 0x7698): "Womier K66",
-    (0x5013, 0x320F): "Akko 3084 Bt5.0",
+    (0x320F, 0x5013): "Akko 3084 Bt5.0",
     (0x0c45, 0x766b): "Kemove DK63",
     (0x05ac, 0x024f): "Keychron K4",
     (0x0c45, 0x7010): "SN32F268F (bootloader)",

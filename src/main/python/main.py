@@ -348,6 +348,15 @@ class MainWindow(QWidget):
             return False
         return True
 
+    def check_jumperloader_firmware(self, jumper_loader):
+        # check the size so we don't trash bootloader
+        # (ok, we wouldn't overwrite it anyway as it's checked again in cmd_flash)
+        if len(jumper_loader) > QMK_OFFSET_DEFAULT:
+            self._on_error("Jumper loader is too large: 0x{:X} max allowed is 0x{:X}".format(
+                len(jumper_loader), MAX_FIRMWARE-QMK_OFFSET_DEFAULT))
+            return False
+        return True
+
     def on_click_flash_qmk(self):
         self.dev = self.get_active_device()
         if not self.dev:
@@ -402,7 +411,36 @@ class MainWindow(QWidget):
         self.dangerous_flash(appctxt.get_resource("stock-firmware.bin"))
 
     def on_click_flash_jumploader(self):
-        self.dangerous_flash(appctxt.get_resource("jumploader.bin"))
+        reply = QMessageBox.question(self, "Warning", "This is a potentially dangerous operation, are you sure you want to continue?",
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply != QMessageBox.Yes:
+            return
+
+        self.dev = self.get_active_device()
+        if not self.dev:
+            return
+
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        filename = QFileDialog.getOpenFileName(
+            None, "Select jumploader to flash", "", "Jumploader Files (*.bin)", options=options)[0]
+        if not filename:
+            self.close_dev()
+            return
+
+        with open(filename, "rb") as inf:
+            firmware = inf.read()
+
+        if not self.check_jumperloader_firmware(firmware):
+            self.close_dev()
+            return
+
+        if len(firmware) < QMK_OFFSET_DEFAULT:
+            firmware += b"\x00" * (QMK_OFFSET_DEFAULT - len(firmware))
+
+        self.lock_user()
+        threading.Thread(target=lambda: cmd_flash(
+            self.dev, 0, firmware, self.on_progress, self.on_complete, self.on_error)).start()
 
 
 def excepthook(exc_type, exc_value, exc_tb):

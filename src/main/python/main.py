@@ -310,7 +310,7 @@ class MainWindow(QWidget):
 
         for dev in hid.enumerate():
             vid, pid = dev["vendor_id"], dev["product_id"]
-            if (vid, pid) in self.device_descs and dev["interface_number"] == 0:
+            if (vid, pid) in self.device_descs and dev["interface_number"] <= 0:
                 self.combobox_devices.addItem("{} [{:04X}:{:04X}]  {} {} ".format(
                     self.device_descs[(vid, pid)], vid, pid, dev["manufacturer_string"], dev["product_string"]))
                 self.devices.append(dev)

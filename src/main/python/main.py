@@ -28,12 +28,16 @@ CMD_REBOOT = CMD_BASE + 7
 EXPECTED_STATUS = 0xFAFAFAFA
 
 DEVICE_DESC = {
-    (0x0c45, 0x7698): "Womier K66",
-    (0x320F, 0x5013): "Akko 3084 Bt5.0",
-    (0x0c45, 0x766b): "Kemove DK63",
-    (0x05ac, 0x024f): "Keychron K4",
+    # keyboards in bootloader mode:
     (0x0c45, 0x7010): "SN32F268F (bootloader)",
     (0x0c45, 0x7040): "SN32F248B (bootloader)",
+    
+    # keyboards in normal mode:
+    (0x05ac, 0x024f): "Keychron K4",
+    (0x0c45, 0x652f): "Glorious GMMK / Tecware Phantom",
+    (0x0c45, 0x766b): "Kemove DK63",
+    (0x0c45, 0x7698): "Womier K66",
+    (0x320F, 0x5013): "Akko 3084 Bt5.0",
 }
 
 

@@ -456,7 +456,7 @@ def excepthook(exc_type, exc_value, exc_tb):
 if __name__ == '__main__':
     appctxt = ApplicationContext()
     window = MainWindow()
-    window.resize(600, 250)
+    window.resize(600, 500)
     window.setWindowTitle("Sonix Keyboard Flasher")
     window.show()
     sys.excepthook = excepthook

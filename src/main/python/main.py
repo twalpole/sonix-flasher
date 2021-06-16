@@ -39,6 +39,10 @@ DEVICE_DESC = {
     (0x0c45, 0x7698): "Womier",
     (0x320F, 0x5013): "Akko",
     (0x0c45, 0x5004): "Redragon",
+    (0x0c45, 0x5104): "Redragon",
+    (0x0C45, 0x8513): "Sharkoon",
+    (0x0C45, 0x8508): "SPCGear",
+    (0x0C45, 0x7903): "Ajazz",
 }
 
 
@@ -68,13 +72,14 @@ def console_error(msg):
     print("Error: {}".format(msg))
 
 
-def cmd_flash(dev, offset, firmware, progress_cb=console_progress, complete_cb=console_complete, error_cb=console_error):
+def cmd_flash(dev, offset, firmware, progress_cb=console_progress, complete_cb=console_complete, error_cb=console_error, skip_size_check=False):
     while len(firmware) % 64 != 0:
         firmware += b"\x00"
-
-    if len(firmware) + offset > MAX_FIRMWARE:
-        return error_cb("Firmware is too large to flash")
-
+        
+    if(skip_size_check == False):
+        if len(firmware) + offset > MAX_FIRMWARE:
+            return error_cb("Firmware is too large to flash")
+    
     # 1) Initialize
     progress_cb("Initializing device", 0)
     hid_set_feature(dev, struct.pack("<I", CMD_INIT))
@@ -395,8 +400,8 @@ class MainWindow(QWidget):
         threading.Thread(target=lambda: cmd_reboot(
             self.dev, self.on_progress, self.on_complete, self.on_error)).start()
 
-    def dangerous_flash(self, path):
-        reply = QMessageBox.question(self, "Warning", "This is a potentially dangerous operation, are you sure you want to continue?",
+    def on_click_revert(self):
+        reply = QMessageBox.question(self, "Warning", "This is a potentially dangerous operation. It does not check if your firmware is valid. Are you sure you want to continue?",
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply != QMessageBox.Yes:
             return
@@ -405,15 +410,21 @@ class MainWindow(QWidget):
         if not self.dev:
             return
 
-        with open(path, "rb") as inf:
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        filename = QFileDialog.getOpenFileName(
+            None, "Select stock firmware to flash", "", "Stock Firmware (*.bin)", options=options)[0]
+        if not filename:
+            self.close_dev()
+            return
+
+        with open(filename, "rb") as inf:
             firmware = inf.read()
 
         self.lock_user()
         threading.Thread(target=lambda: cmd_flash(
-            self.dev, 0, firmware, self.on_progress, self.on_complete, self.on_error)).start()
-
-    def on_click_revert(self):
-        self.dangerous_flash(appctxt.get_resource("stock-firmware.bin"))
+            self.dev, 0, firmware, self.on_progress, self.on_complete, self.on_error, True)).start()
+        
 
     def on_click_flash_jumploader(self):
         reply = QMessageBox.question(self, "Warning", "This is a potentially dangerous operation, are you sure you want to continue?",

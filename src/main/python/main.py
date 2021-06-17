@@ -40,7 +40,7 @@ DEVICE_DESC = {
     (0x0c45, 0x652f): "Glorious GMMK / Tecware Phantom",
     (0x0c45, 0x766b): "Kemove",
     (0x0c45, 0x7698): "Womier",
-    (0x320F, 0x5013): "Akko",d
+    (0x320F, 0x5013): "Akko",
     (0x0c45, 0x5004): "Redragon",
     (0x0c45, 0x5104): "Redragon",
     (0x0C45, 0x8513): "Sharkoon",
@@ -144,7 +144,6 @@ class MainWindow(QWidget):
 
 
         self.device_descs = DEVICE_DESC.copy()
-        self.load_devices_ini()
 
         self.qmk_offset = QMK_OFFSET_DEFAULT
 
@@ -262,15 +261,6 @@ class MainWindow(QWidget):
 
         self.on_click_refresh()
 
-    def load_devices_ini(self):
-        cf = configparser.ConfigParser()
-        cf.read(appctxt.get_resource("devices.ini"))
-        for sec in cf.sections():
-            # print(cf.options(sec))
-            vid = int(cf.get(sec, 'vid'), 16)
-            pid = int(cf.get(sec, 'pid'), 16)
-            self.device_descs.update({(vid, pid): sec})
-
     def lock_user(self):
         for obj in self.lockable:
             obj.setEnabled(False)
@@ -337,7 +327,7 @@ class MainWindow(QWidget):
                     self.device_descs[(vid, pid)], vid, pid, dev["manufacturer_string"], dev["product_string"]))
                 self.devices.append(dev)
 
-                if pid == 0x7040 | pid == 0x7900:  # Sonix 248 and 248B
+                if pid == 0x7040 or pid == 0x7900:  # Sonix 248 and 248B
                     self.qmk_offset = "0x00"
                     self.rbtn_qmk_offset_0.setChecked(True)
                     self.rbtn_qmk_offset_200.setChecked(False)

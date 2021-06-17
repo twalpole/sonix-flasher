@@ -10,6 +10,7 @@ import configparser
 import time
 import threading
 import traceback
+import webbrowser
 
 # TODO: dry-run support to ensure flashing doesn't crash
 
@@ -126,6 +127,7 @@ def cmd_reboot(dev, progress_cb=console_progress, complete_cb=console_complete, 
     complete_cb()
 
 
+
 class MainWindow(QWidget):
 
     progress_signal = pyqtSignal(object)
@@ -176,7 +178,10 @@ class MainWindow(QWidget):
         btn_flash_jumploader.clicked.connect(self.on_click_flash_jumploader)
         btn_restore_stock = QPushButton("Revert to Stock Firmware")
         btn_restore_stock.clicked.connect(self.on_click_revert)
-
+        btn_download_stock_fw = QPushButton("Download Stock Firmware")
+        btn_download_stock_fw.clicked.connect(self.on_download_click)
+        lbl_note = QLabel("Download button only works when not running as root.")
+        lbl_note.setWordWrap(True)
         self.progress = QProgressBar()
         self.progress.setRange(0, 100)
         self.progress_label = QLabel("Ready")
@@ -221,7 +226,9 @@ class MainWindow(QWidget):
         layout_stock.addWidget(btn_reboot_bl)
         layout_stock.addWidget(btn_flash_jumploader)
         layout_stock.addWidget(btn_restore_stock)
-
+        layout_stock.addWidget(btn_download_stock_fw)
+        layout_stock.addWidget(lbl_note)
+        
         layout_progress = QVBoxLayout()
         layout_progress.addWidget(self.progress_label)
         layout_progress.addWidget(self.progress)
@@ -457,6 +464,9 @@ class MainWindow(QWidget):
         self.lock_user()
         threading.Thread(target=lambda: cmd_flash(
             self.dev, 0, firmware, self.on_progress, self.on_complete, self.on_error)).start()
+            
+    def on_download_click(self):
+    	webbrowser.open("https://github.com/SonixQMK/Mechanical-Keyboard-Database", new=1, autoraise=True)
 
 
 def excepthook(exc_type, exc_value, exc_tb):

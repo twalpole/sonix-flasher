@@ -11,6 +11,7 @@ import time
 import threading
 import traceback
 import webbrowser
+import os
 
 # TODO: dry-run support to ensure flashing doesn't crash
 
@@ -138,6 +139,7 @@ class MainWindow(QWidget):
         super().__init__()
 
         self.dev = None
+         
 
         self.device_descs = DEVICE_DESC.copy()
         self.load_devices_ini()
@@ -154,10 +156,11 @@ class MainWindow(QWidget):
 
         layout_offset = QHBoxLayout()
         rbtn_qmk_offset_200 = QRadioButton("0x200")
-        rbtn_qmk_offset_200.setChecked(True)
+        rbtn_qmk_offset_200.setChecked(False)
         rbtn_qmk_offset_200.toggled.connect(
             lambda: self.on_toggle_offset(rbtn_qmk_offset_200))
         rbtn_qmk_offset_0 = QRadioButton("0x00")
+        rbtn_qmk_offset_0.setChecked(True)
         rbtn_qmk_offset_0.toggled.connect(
             lambda: self.on_toggle_offset(rbtn_qmk_offset_0))
         layout_offset.addWidget(rbtn_qmk_offset_200)
@@ -180,8 +183,10 @@ class MainWindow(QWidget):
         btn_restore_stock.clicked.connect(self.on_click_revert)
         btn_download_stock_fw = QPushButton("Download Stock Firmware")
         btn_download_stock_fw.clicked.connect(self.on_download_click)
-        lbl_note = QLabel("Download button only works when not running as root.")
-        lbl_note.setWordWrap(True)
+        if os.geteuid() == 0:
+            btn_download_stock_fw.setEnabled(False)
+            
+           
         self.progress = QProgressBar()
         self.progress.setRange(0, 100)
         self.progress_label = QLabel("Ready")
@@ -227,7 +232,6 @@ class MainWindow(QWidget):
         layout_stock.addWidget(btn_flash_jumploader)
         layout_stock.addWidget(btn_restore_stock)
         layout_stock.addWidget(btn_download_stock_fw)
-        layout_stock.addWidget(lbl_note)
         
         layout_progress = QVBoxLayout()
         layout_progress.addWidget(self.progress_label)
@@ -479,7 +483,11 @@ if __name__ == '__main__':
     appctxt = ApplicationContext()
     window = MainWindow()
     window.resize(600, 500)
-    window.setWindowTitle("Sonix Keyboard Flasher")
+    if os.geteuid() == 0:
+        window.setWindowTitle("Sonix Keyboard Flasher (ROOT)")
+    else:
+        window.setWindowTitle("Sonix Keyboard Flasher")
+    
     window.show()
     sys.excepthook = excepthook
     exit_code = appctxt.app.exec_()

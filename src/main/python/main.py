@@ -17,7 +17,7 @@ import os
 
 RESPONSE_LEN = 64
 MAX_FIRMWARE_SN32F260 = 30 * 1024  # 30K
-MAX_FIRMWARE_SN32F240 = 64 * 1024  # 64K
+MAX_FIRMWARE_SN32F240 = 64 * 1024  # 64K Also 240B
 MAX_FIRMWARE = MAX_FIRMWARE_SN32F260
 QMK_OFFSET_DEFAULT = 0x200
 
@@ -31,15 +31,16 @@ EXPECTED_STATUS = 0xFAFAFAFA
 
 DEVICE_DESC = {
     # keyboards in bootloader mode:
-    (0x0c45, 0x7010): "SN32F268F (bootloader)",
-    (0x0c45, 0x7040): "SN32F248B (bootloader)",
-    
+    (0x0c45, 0x7010): "SN32F268F (bootloader)",  # 0x200
+    (0x0c45, 0x7040): "SN32F248B (bootloader)",  # 0x0
+    (0x0c45, 0x7900): "SN32F248 (bootloader)",   # 0x0
+
     # keyboards in normal mode:
     (0x05ac, 0x024f): "Keychron",
     (0x0c45, 0x652f): "Glorious GMMK / Tecware Phantom",
     (0x0c45, 0x766b): "Kemove",
     (0x0c45, 0x7698): "Womier",
-    (0x320F, 0x5013): "Akko",
+    (0x320F, 0x5013): "Akko",d
     (0x0c45, 0x5004): "Redragon",
     (0x0c45, 0x5104): "Redragon",
     (0x0C45, 0x8513): "Sharkoon",
@@ -77,11 +78,11 @@ def console_error(msg):
 def cmd_flash(dev, offset, firmware, progress_cb=console_progress, complete_cb=console_complete, error_cb=console_error, skip_size_check=False):
     while len(firmware) % 64 != 0:
         firmware += b"\x00"
-        
+
     if(skip_size_check == False):
         if len(firmware) + offset > MAX_FIRMWARE:
             return error_cb("Firmware is too large to flash")
-    
+
     # 1) Initialize
     progress_cb("Initializing device", 0)
     hid_set_feature(dev, struct.pack("<I", CMD_INIT))
@@ -135,11 +136,12 @@ class MainWindow(QWidget):
     complete_signal = pyqtSignal(object)
     error_signal = pyqtSignal(object)
 
+
     def __init__(self):
         super().__init__()
 
         self.dev = None
-         
+
 
         self.device_descs = DEVICE_DESC.copy()
         self.load_devices_ini()
@@ -155,16 +157,15 @@ class MainWindow(QWidget):
         lbl_warning.setWordWrap(True)
 
         layout_offset = QHBoxLayout()
-        rbtn_qmk_offset_200 = QRadioButton("0x200")
-        rbtn_qmk_offset_200.setChecked(False)
-        rbtn_qmk_offset_200.toggled.connect(
-            lambda: self.on_toggle_offset(rbtn_qmk_offset_200))
-        rbtn_qmk_offset_0 = QRadioButton("0x00")
-        rbtn_qmk_offset_0.setChecked(True)
-        rbtn_qmk_offset_0.toggled.connect(
-            lambda: self.on_toggle_offset(rbtn_qmk_offset_0))
-        layout_offset.addWidget(rbtn_qmk_offset_200)
-        layout_offset.addWidget(rbtn_qmk_offset_0)
+        self.rbtn_qmk_offset_200 = QRadioButton("0x200")
+        self.rbtn_qmk_offset_200.setChecked(True)
+        self.rbtn_qmk_offset_200.toggled.connect(
+            lambda: self.on_toggle_offset(self.rbtn_qmk_offset_200))
+        self.rbtn_qmk_offset_0 = QRadioButton("0x00")
+        self.rbtn_qmk_offset_0.toggled.connect(
+            lambda: self.on_toggle_offset(self.rbtn_qmk_offset_0))
+        layout_offset.addWidget(self.rbtn_qmk_offset_200)
+        layout_offset.addWidget(self.rbtn_qmk_offset_0)
         group_qmk_offset = QGroupBox("qmk offset")
         group_qmk_offset.setLayout(layout_offset)
 
@@ -185,22 +186,22 @@ class MainWindow(QWidget):
         btn_download_stock_fw.clicked.connect(self.on_download_click)
         if os.geteuid() == 0:
             btn_download_stock_fw.setEnabled(False)
-            
-           
+
+
         self.progress = QProgressBar()
         self.progress.setRange(0, 100)
         self.progress_label = QLabel("Ready")
 
         layout_device_type = QHBoxLayout()
-        rbtn_device_type_240 = QRadioButton("SN32F24x")
-        rbtn_device_type_240.toggled.connect(
-            lambda: self.on_toggle_device_type(rbtn_device_type_240))
-        rbtn_device_type_260 = QRadioButton("SN32F26x")
-        rbtn_device_type_260.setChecked(True)
-        rbtn_device_type_260.toggled.connect(
-            lambda: self.on_toggle_device_type(rbtn_device_type_260))
-        layout_device_type.addWidget(rbtn_device_type_260)
-        layout_device_type.addWidget(rbtn_device_type_240)
+        self.rbtn_device_type_240 = QRadioButton("SN32F24x")
+        self.rbtn_device_type_240.toggled.connect(
+            lambda: self.on_toggle_device_type(self.rbtn_device_type_240))
+        self.rbtn_device_type_260 = QRadioButton("SN32F26x")
+        self.rbtn_device_type_260.setChecked(True)
+        self.rbtn_device_type_260.toggled.connect(
+            lambda: self.on_toggle_device_type(self.rbtn_device_type_260))
+        layout_device_type.addWidget(self.rbtn_device_type_260)
+        layout_device_type.addWidget(self.rbtn_device_type_240)
 
         self.combobox_devices = QComboBox()
         btn_refresh_devices = QToolButton()
@@ -232,7 +233,7 @@ class MainWindow(QWidget):
         layout_stock.addWidget(btn_flash_jumploader)
         layout_stock.addWidget(btn_restore_stock)
         layout_stock.addWidget(btn_download_stock_fw)
-        
+
         layout_progress = QVBoxLayout()
         layout_progress.addWidget(self.progress_label)
         layout_progress.addWidget(self.progress)
@@ -336,6 +337,20 @@ class MainWindow(QWidget):
                     self.device_descs[(vid, pid)], vid, pid, dev["manufacturer_string"], dev["product_string"]))
                 self.devices.append(dev)
 
+                if pid == 0x7040 | pid == 0x7900:  # Sonix 248 and 248B
+                    self.qmk_offset = "0x00"
+                    self.rbtn_qmk_offset_0.setChecked(True)
+                    self.rbtn_qmk_offset_200.setChecked(False)
+                    self.rbtn_device_type_260.setChecked(False)
+                    self.rbtn_device_type_240.setChecked(True)
+
+                if pid == 0x7010:  # Sonix 260
+                    self.qmk_offset = "0x200"
+                    self.rbtn_qmk_offset_200.setChecked(True)
+                    self.rbtn_qmk_offset_0.setChecked(False)
+                    self.rbtn_device_type_240.setChecked(False)
+                    self.rbtn_device_type_260.setChecked(True)
+
     def get_active_device(self):
         idx = self.combobox_devices.currentIndex()
         if idx == -1:
@@ -435,7 +450,7 @@ class MainWindow(QWidget):
         self.lock_user()
         threading.Thread(target=lambda: cmd_flash(
             self.dev, 0, firmware, self.on_progress, self.on_complete, self.on_error, True)).start()
-        
+
 
     def on_click_flash_jumploader(self):
         reply = QMessageBox.question(self, "Warning", "This is a potentially dangerous operation, are you sure you want to continue?",
@@ -468,7 +483,7 @@ class MainWindow(QWidget):
         self.lock_user()
         threading.Thread(target=lambda: cmd_flash(
             self.dev, 0, firmware, self.on_progress, self.on_complete, self.on_error)).start()
-            
+
     def on_download_click(self):
     	webbrowser.open("https://github.com/SonixQMK/Mechanical-Keyboard-Database", new=1, autoraise=True)
 
@@ -487,7 +502,7 @@ if __name__ == '__main__':
         window.setWindowTitle("Sonix Keyboard Flasher (ROOT)")
     else:
         window.setWindowTitle("Sonix Keyboard Flasher")
-    
+
     window.show()
     sys.excepthook = excepthook
     exit_code = appctxt.app.exec_()

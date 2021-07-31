@@ -46,6 +46,7 @@ DEVICE_DESC = {
     (0x0C45, 0x8513): "Sharkoon",
     (0x0C45, 0x8508): "SPCGear",
     (0x0C45, 0x7903): "Ajazz",
+    (0x05AC, 0x024F): "Flashquark Horizon Z",
 }
 
 

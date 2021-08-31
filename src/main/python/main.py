@@ -46,8 +46,20 @@ DEVICE_DESC = {
     (0x0C45, 0x8513): "Sharkoon",
     (0x0C45, 0x8508): "SPCGear",
     (0x0C45, 0x7903): "Ajazz",
+    (0x05AC, 0x024F): "Flashquark Horizon Z",
 }
 
+def get_platform():
+    platforms = {
+        'linux1' : 'Linux',
+        'linux2' : 'Linux',
+        'darwin' : 'OS X',
+        'win32' : 'Windows'
+    }
+    if sys.platform not in platforms:
+        return sys.platform
+
+    return platforms[sys.platform]
 
 def hid_set_feature(dev, report):
     if len(report) > 64:
@@ -183,8 +195,9 @@ class MainWindow(QWidget):
         btn_restore_stock.clicked.connect(self.on_click_revert)
         btn_download_stock_fw = QPushButton("Download Stock Firmware")
         btn_download_stock_fw.clicked.connect(self.on_download_click)
-        if os.geteuid() == 0:
-            btn_download_stock_fw.setEnabled(False)
+        if get_platform() == "Linux":
+            if os.geteuid() == 0:
+                btn_download_stock_fw.setEnabled(False)
 
 
         self.progress = QProgressBar()
@@ -488,11 +501,14 @@ if __name__ == '__main__':
     appctxt = ApplicationContext()
     window = MainWindow()
     window.resize(600, 500)
-    if os.geteuid() == 0:
-        window.setWindowTitle("Sonix Keyboard Flasher (ROOT)")
+    if get_platform() == "Linux":
+        if os.geteuid() == 0:
+            window.setWindowTitle("Sonix Keyboard Flasher (ROOT)")
+        else:
+            window.setWindowTitle("Sonix Keyboard Flasher")
     else:
         window.setWindowTitle("Sonix Keyboard Flasher")
-
+        
     window.show()
     sys.excepthook = excepthook
     exit_code = appctxt.app.exec_()

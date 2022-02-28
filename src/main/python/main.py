@@ -197,14 +197,19 @@ def cmd_flash(dev, offset, firmware, progress_cb=console_progress, complete_cb=c
     complete_cb()
 
 
-def cmd_reboot(dev, progress_cb=console_progress, complete_cb=console_complete, error_cb=console_error):
+def cmd_reboot_evision(dev, progress_cb=console_progress, complete_cb=console_complete, error_cb=console_error):
     progress_cb("Reboot to bootloader", 0)
     hid_set_feature(dev, struct.pack("<II", 0x5AA555AA, 0xCC3300FF))
     progress_cb("Reboot to bootloader", 0.5)
     time.sleep(5)
     complete_cb()
 
-
+def cmd_reboot_hfd(dev, progress_cb=console_progress, complete_cb=console_complete, error_cb=console_error):
+    progress_cb("Reboot to bootloader", 0)
+    hid_set_feature(dev, struct.pack("<II", 0x5A8942AA, 0xCC6271FF))
+    progress_cb("Reboot to bootloader", 0.5)
+    time.sleep(5)
+    complete_cb()
 
 class MainWindow(QWidget):
 
@@ -251,8 +256,10 @@ class MainWindow(QWidget):
             "After jumploader is installed, hold Backspace while plugging in the keyboard to start in bootloader mode.")
         lbl_help.setWordWrap(True)
 
-        btn_reboot_bl = QPushButton("Reboot to Bootloader")
-        btn_reboot_bl.clicked.connect(self.on_click_reboot)
+        btn_reboot_bl_evision = QPushButton("Reboot to Bootloader [eVision]")
+        btn_reboot_bl_evision.clicked.connect(self.on_click_reboot_evision)
+        btn_reboot_bl_hfd = QPushButton("Reboot to Bootloader [HFD]")
+        btn_reboot_bl_hfd.clicked.connect(self.on_click_reboot_hfd)
         btn_flash_jumploader = QPushButton("Flash Jumploader")
         btn_flash_jumploader.clicked.connect(self.on_click_flash_jumploader)
         btn_restore_stock = QPushButton("Revert to Stock Firmware")
@@ -305,7 +312,8 @@ class MainWindow(QWidget):
 
         layout_stock = QVBoxLayout()
         layout_stock.setAlignment(Qt.AlignTop)
-        layout_stock.addWidget(btn_reboot_bl)
+        layout_stock.addWidget(btn_reboot_bl_evision)
+        layout_stock.addWidget(btn_reboot_bl_hfd)
         layout_stock.addWidget(btn_flash_jumploader)
         layout_stock.addWidget(btn_restore_stock)
         layout_stock.addWidget(btn_download_stock_fw)
@@ -333,7 +341,7 @@ class MainWindow(QWidget):
         layout.addWidget(group_progress, stretch=0)
         self.setLayout(layout)
 
-        self.lockable = [btn_flash_qmk, btn_reboot_bl, btn_flash_jumploader, btn_restore_stock,
+        self.lockable = [btn_flash_qmk, btn_reboot_bl_evision, btn_reboot_bl_hfd, btn_flash_jumploader, btn_restore_stock,
                          self.combobox_devices, btn_refresh_devices]
 
         self.on_click_refresh()
@@ -503,13 +511,22 @@ class MainWindow(QWidget):
         threading.Thread(target=lambda: cmd_flash(self.dev, self.qmk_offset,
                                                   firmware, self.on_progress, self.on_complete, self.on_error)).start()
 
-    def on_click_reboot(self):
+    def on_click_reboot_evision(self):
         self.dev = self.get_active_device()
         if not self.dev:
             return
 
         self.lock_user()
-        threading.Thread(target=lambda: cmd_reboot(
+        threading.Thread(target=lambda: cmd_reboot_evision(
+            self.dev, self.on_progress, self.on_complete, self.on_error)).start()
+
+    def on_click_reboot_hfd(self):
+        self.dev = self.get_active_device()
+        if not self.dev:
+            return
+
+        self.lock_user()
+        threading.Thread(target=lambda: cmd_reboot_hfd(
             self.dev, self.on_progress, self.on_complete, self.on_error)).start()
 
     def on_click_revert(self):

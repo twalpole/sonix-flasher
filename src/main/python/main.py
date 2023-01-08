@@ -51,6 +51,7 @@ DEVICE_DESC = {
     (0x320f, 0x5013): "Akko",
     (0x320f, 0x5041): "Designed By GG",
     (0x3299, 0x4E58): "SPCGear",
+    (0x3299, 0x4E5B): "SPCGear",
     (0x3434, 0xfe00): "Keychron K1 ANSI",
     (0x3434, 0xfe01): "Keychron K1 ISO",
     (0x3434, 0xfe02): "Keychron K2 ANSI",
